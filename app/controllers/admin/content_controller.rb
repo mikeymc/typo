@@ -27,6 +27,23 @@ class Admin::ContentController < Admin::BaseController
     new_or_edit
   end
 
+  def merge_article
+    @main_article = Article.find(params[:id])
+    if params[:merge_with] != ''
+      @merging_article = Article.find(params[:merge_with])
+    else 
+      @merging_article = nil
+    end
+    if @merging_article == nil
+      flash[:error] = _("Error, that article does not exist")
+    elsif @main_article == @merging_article
+      flash[:error] = _("Error, you cannot merge an article with itself")
+    else
+      @main_article.merge_with(@merging_article)
+    end
+    redirect_to :action => 'edit', :id => params[:id]
+  end
+
   def edit
     @article = Article.find(params[:id])
     unless @article.access_by? current_user
@@ -142,6 +159,7 @@ class Admin::ContentController < Admin::BaseController
   def new_or_edit
     id = params[:id]
     id = params[:article][:id] if params[:article] && params[:article][:id]
+    @admin = current_user.admin?
     @article = Article.get_or_build_article(id)
     @article.text_filter = current_user.text_filter if current_user.simple_editor?
 

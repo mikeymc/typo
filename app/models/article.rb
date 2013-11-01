@@ -372,6 +372,13 @@ class Article < Content
   def published=(newval)
     state.published = cast_to_boolean(newval)
   end
+  
+  def merge_with(a)
+    Comment.update_all("article_id = #{self.id}", "article_id = #{a.id}")
+    self.body = self.body + a.body
+    self.save
+    a.destroy
+  end
 
   def content_fields
     [:body, :extended]
