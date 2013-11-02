@@ -41,7 +41,32 @@ Given /^the blog is set up$/ do
                 :profile_id => 1,
                 :name => 'admin',
                 :state => 'active'})
+        
+   User.create!({:login => 'user',
+                :password => 'banana',
+                :email => 'joe@blow.com',
+                :profile_id => 2,
+                :name => 'non_admin',
+                :state => 'active'})
 end
+
+And /^the author for "(.*)" should be "(.*)"$/ do |title, author|
+  @article = Article.find_by_title(title)
+  @article.author.should == author
+end
+
+And /^I am logged in as a non administrator$/ do
+  visit '/accounts/login'
+  fill_in 'user_login', :with => 'user'
+  fill_in 'user_password', :with => 'banana'
+  click_button 'Login'
+  if page.respond_to? :should
+    page.should have_content('Login successful')
+  else
+    assert page.has_content?('Login successful')
+  end
+end
+
 
 And /^I am logged into the admin panel$/ do
   visit '/accounts/login'
@@ -83,6 +108,16 @@ end
 
 When /^(?:|I )fill in "([^"]*)" with "([^"]*)"$/ do |field, value|
   fill_in(field, :with => value)
+end
+
+When /^I fill in "(.*)" with the article id of "(.*)"$/ do |field, value|
+  @article = Article.find_by_title(value)
+  if @article != nil
+    @article_id = @article.id 
+  else 
+    @article_id = nil
+  end
+  fill_in(field, :with => @article_id)
 end
 
 When /^(?:|I )fill in "([^"]*)" for "([^"]*)"$/ do |value, field|
